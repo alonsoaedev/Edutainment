@@ -7,15 +7,9 @@
 
 import SwiftUI
 
-struct MultiplicationQuestion {
-    private let questionTemplates: [String: String] = [
-        "easy": "%d x %d = ?",
-        "medium": "%d x ? = %d",
-        "hard": "? x ? = %d",
-    ]
-
+struct MultiplicationQuestion: Hashable {
     let level: String
-    let multiplier: Int = Int.random(in: 1...12)
+    let multiplier: Int
     let multiplicand: Int = Int.random(in: 1...12)
     var product: Int { multiplier * multiplicand }
     
@@ -33,7 +27,7 @@ struct MultiplicationQuestion {
     
     var answer: String {
         if level == "hard" {
-            return "\(multiplier),\(multiplicand)"
+            return "\(multiplier), \(multiplicand)"
         }
         
         if level == "medium" {
@@ -60,6 +54,48 @@ struct MultiplicationQuestion {
     }
 }
 
+
+enum Route: Hashable {
+    case game([MultiplicationQuestion])
+}
+
+struct Game: View {
+    let questions: [MultiplicationQuestion]
+    
+    @State private var currentQuestionIndex: Int = 0
+    @State private var correctAnswer: Bool = false
+    
+    var body: some View {
+        VStack {
+            Section("Question") {
+                Text("\(questions[currentQuestionIndex].question)")
+            }
+            
+            Section ("Options") {
+                ForEach(questions[currentQuestionIndex].options, id: \.self) { option in
+                    Button {
+                        withAnimation {
+                            correctAnswer = option == questions[currentQuestionIndex].answer
+                        }
+                        if currentQuestionIndex < questions.count - 1 {
+                            currentQuestionIndex += 1
+                        }
+                    } label: {
+                        Text(option)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+            
+            Text("Correct!")
+                .opacity(correctAnswer ? 1 : 0)
+        }
+        .navigationTitle("Game")
+        .padding()
+    }
+}
+
 struct ContentView: View {
     let levels = ["easy", "medium", "hard"]
     
@@ -68,36 +104,58 @@ struct ContentView: View {
     @State private var selectedLevel = "easy"
     @State private var questions: [MultiplicationQuestion] = []
     
+    @State private var path = NavigationPath()
+    
     func createQuestions(_ tableNumber: Int, _ questionsNumber: Int, _ level: String) -> [MultiplicationQuestion] {
         var createdQuestions: [MultiplicationQuestion] = []
         for _ in 1...questionsNumber {
             createdQuestions.append(
-                MultiplicationQuestion(level: level)
+                MultiplicationQuestion(level: level, multiplier: tableNumber)
             )
         }
         return createdQuestions
     }
     
     var body: some View {
-        VStack {
-            Spacer()
-            
-            Stepper("Table number: \(tableNumber)", value: $tableNumber, in: 2...12, step: 1)
-            Stepper("Number of questions: \(questionsNumber)", value: $questionsNumber, in: 1...10)
-            Picker("Level", selection: $selectedLevel) {
-                ForEach(levels, id: \.self) { level in
-                    Text("\(level)")
+        NavigationStack(path: $path) {
+            VStack {
+                Spacer()
+                
+                Section("Settings") {
+                    Stepper("Table number: \(tableNumber)", value: $tableNumber, in: 2...12, step: 1)
+                    Stepper("Number of questions: \(questionsNumber)", value: $questionsNumber, in: 1...10)
+                    Picker("Level", selection: $selectedLevel) {
+                        ForEach(levels, id: \.self) { level in
+                            Text("\(level)")
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+                
+                Spacer()
+                
+                Button {
+                    questions = createQuestions(
+                        tableNumber,
+                        questionsNumber,
+                        selectedLevel
+                    )
+                    path.append(Route.game(questions))
+                } label: {
+                    Text("Start")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            .navigationTitle("Edutainment")
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .game(let questions):
+                    Game(questions: questions)
                 }
             }
-            .pickerStyle(.segmented)
-            
-            Spacer()
-            
-            Button("Start") {
-                questions = createQuestions(tableNumber, questionsNumber, selectedLevel)
-            }
+            .padding()
         }
-        .padding()
     }
 }
 
