@@ -10,47 +10,64 @@ import SwiftUI
 struct MultiplicationQuestion: Hashable {
     let level: String
     let multiplier: Int
-    let multiplicand: Int = Int.random(in: 1...12)
-    var product: Int { multiplier * multiplicand }
+    private let _multiplicand: Int = Int.random(in: 1...12)
+    private var _product: Int { multiplier * _multiplicand }
+    private var _options: [String] = []
+    private var _answer: String = ""
     
-    var question: String {
+    init(level: String, multiplier: Int) {
+        self.level = level
+        self.multiplier = multiplier
+        self._answer = generateAnswer(level)
+        self._options = generateOptions(level)
+    }
+    
+    private func generateAnswer(_ level: String) -> String {
         if level == "hard" {
-            return "? x ? = \(product)"
+            return "\(multiplier), \(_multiplicand)"
         }
         
         if level == "medium" {
-            return "\(multiplier) x ? = \(product)"
+            return "\(_multiplicand)"
         }
         
-        return "\(multiplier) x \(multiplicand) = ?"
+        return "\(_product)"
     }
     
-    var answer: String {
-        if level == "hard" {
-            return "\(multiplier), \(multiplicand)"
-        }
-        
-        if level == "medium" {
-            return "\(multiplicand)"
-        }
-        
-        return "\(product)"
-    }
-    
-    var options: [String] {
+    private func generateOptions(_ level: String) -> [String] {
         if level == "hard" {
             return [
-                answer,
+                _answer,
                 "\(Int.random(in: 1...12)), \(Int.random(in: 1...12))",
                 "\(Int.random(in: 1...12)), \(Int.random(in: 1...12))",
             ].shuffled()
         }
         
         return [
-            answer,
+            _answer,
             "\(Int.random(in: 1...12))",
             "\(Int.random(in: 1...12))",
         ].shuffled()
+    }
+    
+    var question: String {
+        if level == "hard" {
+            return "? x ? = \(_product)"
+        }
+        
+        if level == "medium" {
+            return "\(multiplier) x ? = \(_product)"
+        }
+        
+        return "\(multiplier) x \(_multiplicand) = ?"
+    }
+    
+    var options: [String] {
+        _options
+    }
+    
+    func isCorrect(answer: String) -> Bool {
+        return _answer == answer
     }
 }
 
@@ -74,9 +91,7 @@ struct Game: View {
             Section ("Options") {
                 ForEach(questions[currentQuestionIndex].options, id: \.self) { option in
                     Button {
-                        withAnimation {
-                            correctAnswer = option == questions[currentQuestionIndex].answer
-                        }
+                        correctAnswer = questions[currentQuestionIndex].isCorrect(answer: option)
                         if currentQuestionIndex < questions.count - 1 {
                             currentQuestionIndex += 1
                         }
@@ -90,6 +105,7 @@ struct Game: View {
             
             Text("Correct!")
                 .opacity(correctAnswer ? 1 : 0)
+                .animation(.easeInOut, value: correctAnswer)
         }
         .navigationTitle("Game")
         .padding()
