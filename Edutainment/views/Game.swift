@@ -13,7 +13,7 @@ struct Game: View {
     @State private var currentQuestionIndex: Int = 0
     @State private var correctAnswer: Bool = false
     @State private var score: Int = 0
-    @State private var isGameStarted: Bool = false
+    @State private var showFeedback: Bool = false
     @State private var isGameOver: Bool = false
     
     var body: some View {
@@ -30,7 +30,10 @@ struct Game: View {
                 Section ("Options") {
                     ForEach(questions[currentQuestionIndex].options, id: \.self) { option in
                         Button {
-                            isGameStarted = true
+                            showFeedback = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                showFeedback = false
+                            }
                             
                             correctAnswer = questions[currentQuestionIndex].isCorrect(answer: option)
                             if currentQuestionIndex < questions.count - 1 {
@@ -53,8 +56,8 @@ struct Game: View {
                 Image(systemName: correctAnswer ? "checkmark.circle" : "xmark.circle")
                     .foregroundStyle(correctAnswer ? .green : .red)
                     .animation(.easeInOut, value: correctAnswer)
-                    .opacity(isGameStarted ? 1 : 0)
-                    .animation(.easeInOut, value: isGameStarted)
+                    .opacity(showFeedback ? 1 : 0)
+                    .animation(.easeInOut, value: showFeedback)
             } else {
                 Text("Score")
                     .font(.largeTitle)
