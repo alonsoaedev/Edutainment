@@ -18,7 +18,12 @@ struct Game: View {
     
     var body: some View {
         VStack {
-            if !isGameOver {
+            if isGameOver {
+                Text("Score")
+                    .font(.largeTitle)
+                Text("\(score)")
+                    .font(.largeTitle)
+            } else {
                 Spacer()
                 
                 Section {
@@ -26,6 +31,7 @@ struct Game: View {
                         .font(.largeTitle.bold())
                     Text("\(score)")
                         .font(.largeTitle.bold())
+                    Text("\(currentQuestionIndex)/\(questions.count)")
                 }
                 
                 Spacer()
@@ -37,20 +43,20 @@ struct Game: View {
                     
                     ForEach(questions[currentQuestionIndex].options, id: \.self) { option in
                         Button {
+                            correctAnswer = questions[currentQuestionIndex].isCorrect(answer: option)
+                            score = correctAnswer ? score + 1 : score
                             showFeedback = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                            
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                                 showFeedback = false
                             }
                             
-                            correctAnswer = questions[currentQuestionIndex].isCorrect(answer: option)
-                            if currentQuestionIndex < questions.count - 1 {
+                            if currentQuestionIndex + 1 < questions.count {
                                 currentQuestionIndex += 1
-                            }
-                            if correctAnswer {
-                                score += 1
-                            }
-                            if currentQuestionIndex == questions.count - 1 {
-                                isGameOver = true
+                            } else {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                    isGameOver = true
+                                }
                             }
                         } label: {
                             Text(option)
@@ -65,21 +71,15 @@ struct Game: View {
                 Image(systemName: correctAnswer ? "checkmark.circle" : "xmark.circle")
                     .font(.title)
                     .foregroundStyle(correctAnswer ? .green : .red)
-                    .animation(.easeInOut, value: correctAnswer)
                     .opacity(showFeedback ? 1 : 0)
                     .animation(.easeInOut, value: showFeedback)
                 
                 Spacer()
-            } else {
-                Text("Score")
-                    .font(.largeTitle)
-                Text("\(score)")
-                    .font(.largeTitle)
             }
         }
         .navigationTitle("Game")
         .padding()
-        .animation(.easeInOut, value: isGameOver)
+        .animation(.easeInOut(duration: 2), value: isGameOver)
     }
 }
 
