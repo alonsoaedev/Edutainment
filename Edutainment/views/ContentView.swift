@@ -36,9 +36,11 @@ struct ContentView: View {
             VStack {
                 Spacer()
                 
-                Section("Settings") {
+                Section {
+                    Text("Settings")
+                        .font(.largeTitle.bold())
                     Stepper("Table number: \(tableNumber)", value: $tableNumber, in: 2...12, step: 1)
-                    Stepper("Number of questions: \(questionsNumber)", value: $questionsNumber, in: 1...10)
+                    Stepper("Questions: \(questionsNumber)", value: $questionsNumber, in: 1...10)
                     Picker("Level", selection: $selectedLevel) {
                         ForEach(levels, id: \.self) { level in
                             Text("\(level)")
@@ -46,6 +48,7 @@ struct ContentView: View {
                     }
                     .pickerStyle(.segmented)
                 }
+                .padding(3)
                 
                 Spacer()
                 
@@ -70,6 +73,7 @@ struct ContentView: View {
                 }
             }
             .padding()
+            .font(.title)
         }
     }
 }

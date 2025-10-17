@@ -19,15 +19,22 @@ struct Game: View {
     var body: some View {
         VStack {
             if !isGameOver {
-                Section("Score") {
+                Spacer()
+                
+                Section {
+                    Text("Score")
+                        .font(.largeTitle.bold())
                     Text("\(score)")
+                        .font(.largeTitle.bold())
                 }
                 
-                Section("Question") {
+                Spacer()
+                
+                Section {
                     Text("\(questions[currentQuestionIndex].question)")
-                }
-                
-                Section ("Options") {
+                        .font(.title)
+                        .padding(.bottom)
+                    
                     ForEach(questions[currentQuestionIndex].options, id: \.self) { option in
                         Button {
                             showFeedback = true
@@ -47,17 +54,22 @@ struct Game: View {
                             }
                         } label: {
                             Text(option)
-                                .frame(maxWidth: .infinity)
+                                .font(.title)
+                                .frame(maxWidth: 200)
                         }
                         .buttonStyle(.borderedProminent)
+                        .padding(3)
                     }
                 }
                 
                 Image(systemName: correctAnswer ? "checkmark.circle" : "xmark.circle")
+                    .font(.title)
                     .foregroundStyle(correctAnswer ? .green : .red)
                     .animation(.easeInOut, value: correctAnswer)
                     .opacity(showFeedback ? 1 : 0)
                     .animation(.easeInOut, value: showFeedback)
+                
+                Spacer()
             } else {
                 Text("Score")
                     .font(.largeTitle)
@@ -67,6 +79,7 @@ struct Game: View {
         }
         .navigationTitle("Game")
         .padding()
+        .animation(.easeInOut, value: isGameOver)
     }
 }
 
